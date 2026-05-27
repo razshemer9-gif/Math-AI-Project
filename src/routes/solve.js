@@ -7,7 +7,9 @@ const router = Router();
 
 router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const text = req.body?.text?.trim();
+    const text  = req.body?.text?.trim();
+    const grade = req.body?.grade ? String(req.body.grade) : '1';
+    const level = req.body?.level || 'easy';
     const image = req.file
       ? { buffer: req.file.buffer, mimeType: req.file.mimetype }
       : null;
@@ -16,7 +18,7 @@ router.post('/', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Send "text" field or "image" file.' });
     }
 
-    const explanation = await solveMath({ text, image });
+    const explanation = await solveMath({ text, image, grade, level });
     res.json({ explanation });
   } catch (err) {
     console.error(err);
