@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>מורה למתמטיקה</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 2rem 1rem;
+      color: #1f2937;
+    }
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+    p.sub { margin: 0 0 1.25rem; color: #6b7280; font-size: .95rem; }
+    label { display: block; font-weight: 600; margin: .75rem 0 .35rem; }
+    textarea, input[type=file] {
+      width: 100%;
+      padding: .65rem .75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    button {
+      margin-top: 1rem;
+      width: 100%;
+      padding: .75rem 1rem;
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .result {
+      margin-top: 1.25rem;
+      padding: 1rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      min-height: 60px;
+    }
+    .error { color: #b91c1c; }
+    .muted { color: #6b7280; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🧮 מורה למתמטיקה</h1>
+    <p class="sub">שלחו שאלה כתובה או תמונה — נקבל הסבר בעברית, צעד-צעד.</p>
+
+    <form id="form">
+      <label for="text">שאלה (טקסט)</label>
+      <textarea id="text" name="text" placeholder="לדוגמה: כמה זה 12 ÷ 4 + 3?"></textarea>
+
+      <label for="image">או תמונה של השאלה</label>
+      <input type="file" id="image" name="image" accept="image/*" />
+
+      <button type="submit" id="submit">פתור</button>
+    </form>
+
+    <div id="result" class="result muted">התשובה תופיע כאן…</div>
+  </main>
+
+  <script>
+    const form = document.getElementById('form');
+    const submitBtn = document.getElementById('submit');
+    const resultEl = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('text').value.trim();
+      const file = document.getElementById('image').files[0];
+
+      if (!text && !file) {
+        resultEl.className = 'result error';
+        resultEl.textContent = 'יש להזין שאלה או לבחור תמונה.';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'חושב…';
+      resultEl.className = 'result muted';
+      resultEl.textContent = 'מחשב את הפתרון…';
+
+      try {
+        const fd = new FormData();
+        if (text) fd.append('text', text);
+        if (file) fd.append('image', file);
+
+        const res = await fetch('/solve', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'שגיאה לא ידועה');
+
+        resultEl.className = 'result';
+        resultEl.textContent = data.explanation;
+      } catch (err) {
+        resultEl.className = 'result error';
+        resultEl.textContent = 'שגיאה: ' + err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'פתור';
+      }
+    });
+  </script>
+</body>
+</html>
