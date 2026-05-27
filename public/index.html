@@ -375,6 +375,24 @@
       color: #1E3A8A;
     }
     .attach-chip .x:hover { background: #fff; }
+    .attach-chip .thumb {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex: 0 0 36px;
+      border: 1px solid rgba(255,255,255,.6);
+      background: #fff;
+    }
+
+    .msg-image {
+      display: block;
+      max-width: 100%;
+      max-height: 240px;
+      border-radius: var(--radius-md);
+      margin-bottom: .4rem;
+      object-fit: contain;
+      background: #fff;
+    }
 
     /* INPUT */
     .input-wrap {
@@ -502,10 +520,10 @@
 
     <div class="input-wrap">
       <form class="input-bar" id="form" autocomplete="off">
-        <button class="icon-btn" type="button" id="attachBtn" title="צרף תמונה" aria-label="צרף תמונה">📎</button>
+        <button class="icon-btn" type="button" id="galleryBtn" title="העלה מהגלריה" aria-label="העלה מהגלריה">🖼️</button>
         <button class="icon-btn" type="button" id="cameraBtn" title="צילום" aria-label="צילום">📷</button>
-        <input type="file" id="image"  accept="image/*"                       hidden />
-        <input type="file" id="camera" accept="image/*" capture="environment" hidden />
+        <input type="file" id="gallery" accept="image/*"                       hidden />
+        <input type="file" id="camera"  accept="image/*" capture="environment" hidden />
         <textarea id="text" rows="1" placeholder="כתוב כאן את השאלה שלך…" aria-label="שאלה"></textarea>
         <button class="icon-btn send" type="submit" id="submit" aria-label="שלח" title="שלח">➤</button>
       </form>
@@ -514,19 +532,23 @@
   </main>
 
   <script>
-    const chat       = document.getElementById('chat');
-    const form       = document.getElementById('form');
-    const textInput  = document.getElementById('text');
-    const imageInput = document.getElementById('image');
-    const cameraInput= document.getElementById('camera');
-    const attachBtn  = document.getElementById('attachBtn');
-    const cameraBtn  = document.getElementById('cameraBtn');
-    const sendBtn    = document.getElementById('submit');
-    const attachWrap = document.getElementById('attachWrap');
+    const chat        = document.getElementById('chat');
+    const form        = document.getElementById('form');
+    const textInput   = document.getElementById('text');
+    const galleryInput= document.getElementById('gallery');
+    const cameraInput = document.getElementById('camera');
+    const galleryBtn  = document.getElementById('galleryBtn');
+    const cameraBtn   = document.getElementById('cameraBtn');
+    const sendBtn     = document.getElementById('submit');
+    const attachWrap  = document.getElementById('attachWrap');
 
-    let pendingFile   = null;
-    let selectedLevel = 'easy';
-    let selectedGrade = '1';
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    const TOO_LARGE_MSG   = 'התמונה גדולה מדי. נסה להעלות תמונה קטנה יותר.';
+
+    let pendingFile    = null;
+    let pendingPreview = null;
+    let selectedLevel  = 'easy';
+    let selectedGrade  = '1';
 
     // Pills
     document.querySelectorAll('#gradeBar .pill[data-grade]').forEach(btn => {
@@ -545,25 +567,48 @@
     });
 
     // File attach
-    attachBtn.addEventListener('click', () => imageInput.click());
-    cameraBtn.addEventListener('click', () => cameraInput.click());
-    imageInput.addEventListener('change', e => setFile(e.target.files[0]));
-    cameraInput.addEventListener('change', e => setFile(e.target.files[0]));
+    galleryBtn.addEventListener('click', () => galleryInput.click());
+    cameraBtn.addEventListener('click',  () => cameraInput.click());
+    galleryInput.addEventListener('change', e => setFile(e.target.files[0]));
+    cameraInput.addEventListener('change',  e => setFile(e.target.files[0]));
+
+    function clearAttachment() {
+      pendingFile = null;
+      pendingPreview = null;
+      galleryInput.value = '';
+      cameraInput.value = '';
+      attachWrap.innerHTML = '';
+    }
 
     function setFile(f) {
-      pendingFile = f || null;
+      if (!f) { clearAttachment(); return; }
+
+      if (f.size > MAX_IMAGE_BYTES) {
+        clearAttachment();
+        addAiError(TOO_LARGE_MSG);
+        return;
+      }
+
+      pendingFile = f;
       attachWrap.innerHTML = '';
-      if (!f) return;
+
       const chip = document.createElement('div');
       chip.className = 'attach-chip';
-      chip.innerHTML = `📎 <span class="name">${escapeHtml(f.name)}</span> <span class="x" title="הסר">✕</span>`;
-      chip.querySelector('.x').addEventListener('click', () => {
-        pendingFile = null;
-        imageInput.value = '';
-        cameraInput.value = '';
-        attachWrap.innerHTML = '';
-      });
+      chip.innerHTML = `
+        <img class="thumb" alt="" />
+        <span class="name">${escapeHtml(f.name)}</span>
+        <span class="x" title="הסר">✕</span>
+      `;
+      chip.querySelector('.x').addEventListener('click', clearAttachment);
       attachWrap.appendChild(chip);
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        pendingPreview = ev.target.result;
+        const img = chip.querySelector('.thumb');
+        if (img) img.src = pendingPreview;
+      };
+      reader.readAsDataURL(f);
     }
 
     // Textarea auto-resize + Enter to submit (Shift+Enter for newline)
@@ -590,15 +635,18 @@
     }
     function scrollToEnd() { requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; }); }
 
-    function addUserMessage(text, fileName) {
+    function addUserMessage(text, fileName, previewSrc) {
       const row = document.createElement('div');
       row.className = 'msg-row user';
-      const body = fileName
-        ? `${escapeHtml(text || '(תמונה)')}<br><small>📎 ${escapeHtml(fileName)}</small>`
-        : escapeHtml(text);
+      const imgHtml = previewSrc
+        ? `<img class="msg-image" src="${previewSrc}" alt="${escapeHtml(fileName || 'תמונה')}" />`
+        : '';
+      const textHtml = text
+        ? escapeHtml(text)
+        : (fileName ? '<em>תמונה</em>' : '');
       row.innerHTML = `
         <div class="avatar" aria-hidden="true">🧒</div>
-        <div class="bubble">${body}<span class="time">${nowLabel()}</span></div>
+        <div class="bubble">${imgHtml}${textHtml}<span class="time">${nowLabel()}</span></div>
       `;
       chat.appendChild(row);
       scrollToEnd();
@@ -765,13 +813,17 @@
       const text = textInput.value.trim();
       if (!text && !pendingFile) return;
 
-      addUserMessage(text, pendingFile?.name);
+      if (pendingFile && pendingFile.size > MAX_IMAGE_BYTES) {
+        addAiError(TOO_LARGE_MSG);
+        clearAttachment();
+        return;
+      }
+
+      addUserMessage(text, pendingFile?.name, pendingPreview);
       const sentText = text;
       const sentFile = pendingFile;
       textInput.value = ''; autoresize();
-      pendingFile = null;
-      imageInput.value = ''; cameraInput.value = '';
-      attachWrap.innerHTML = '';
+      clearAttachment();
 
       sendBtn.disabled = true;
       addTypingBubble();
