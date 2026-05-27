@@ -2,3 +2,6 @@ node_modules
 .env
 .DS_Store
 .claude/
+
+# Stray local clone that ended up inside the working dir
+Math AI Project/

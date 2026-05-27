@@ -2,121 +2,797 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>מורה למתמטיקה</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>המורה שלי למתמטיקה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
+    :root {
+      --bg-start:        #FFF8E7;
+      --bg-end:          #FCE7E0;
+      --card-bg:         #FFFFFF;
+      --text:            #1F2937;
+      --text-soft:       #374151;
+      --muted:           #6B7280;
+      --line:            #E5E7EB;
+      --line-soft:       #F1F5F9;
+
+      --primary:         #16A34A;
+      --primary-dark:    #15803D;
+      --primary-soft:    #DCFCE7;
+      --primary-glow:    rgba(22,163,74,.28);
+
+      --accent-blue:     #2563EB;
+      --accent-blue-soft:#DBEAFE;
+      --accent-purple:   #7C3AED;
+      --accent-purple-soft:#EDE9FE;
+      --accent-amber:    #F59E0B;
+      --accent-amber-soft:#FEF3C7;
+
+      --user-bubble:     #DCFCE7;
+      --user-bubble-text:#14532D;
+      --ai-bubble:       #FFFFFF;
+
+      --shadow-card:     0 18px 50px -20px rgba(15, 23, 42, .25), 0 6px 20px -10px rgba(15, 23, 42, .15);
+      --shadow-soft:     0 4px 16px rgba(15, 23, 42, .08);
+      --shadow-press:    0 2px 6px rgba(15, 23, 42, .08);
+
+      --radius-card:     28px;
+      --radius-lg:       22px;
+      --radius-md:       16px;
+      --radius-sm:       12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { -webkit-text-size-adjust: 100%; }
+    html, body { height: 100%; margin: 0; }
     body {
-      font-family: -apple-system, "Segoe UI", Arial, sans-serif;
-      background: #f4f6fb;
-      margin: 0;
-      padding: 2rem 1rem;
-      color: #1f2937;
+      font-family: 'Rubik', 'Heebo', -apple-system, 'Segoe UI', Arial, sans-serif;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.55;
+      background:
+        radial-gradient(1200px 600px at 15% -10%, #FFE4B5 0%, transparent 60%),
+        radial-gradient(1000px 500px at 85% 110%, #FBCFE8 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      background-attachment: fixed;
+      min-height: 100svh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: clamp(0px, 2vw, 28px);
     }
-    main {
-      max-width: 640px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 14px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
-    p.sub { margin: 0 0 1.25rem; color: #6b7280; font-size: .95rem; }
-    label { display: block; font-weight: 600; margin: .75rem 0 .35rem; }
-    textarea, input[type=file] {
+
+    .app {
       width: 100%;
-      padding: .65rem .75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+      max-width: 560px;
+      min-height: calc(100svh - 2 * clamp(0px, 2vw, 28px));
+      min-height: calc(100dvh - 2 * clamp(0px, 2vw, 28px));
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+
+    /* HEADER */
+    .header {
+      padding: 1.05rem 1.15rem .85rem;
+      display: flex;
+      align-items: center;
+      gap: .85rem;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-bottom: 1px solid var(--line-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '+ × ÷';
+      position: absolute;
+      top: 8px; left: 18px;
+      font-weight: 800;
+      color: rgba(245, 158, 11, .35);
+      font-size: .9rem;
+      letter-spacing: .25em;
+      pointer-events: none;
+    }
+    .header::after {
+      content: '⭐';
+      position: absolute;
+      bottom: 8px; left: 14px;
       font-size: 1rem;
+      opacity: .55;
+      pointer-events: none;
+    }
+    .avatar-teacher {
+      width: 60px; height: 60px; flex: 0 0 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FCD34D, #F87171);
+      display: grid; place-items: center;
+      font-size: 2rem;
+      box-shadow: 0 8px 18px -8px rgba(244, 114, 128, .45);
+      border: 3px solid #fff;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      color: #1F2937;
+    }
+    .header .sub {
+      margin: .1rem 0 0;
+      font-size: .85rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* PILL BARS */
+    .pill-bar {
+      display: flex;
+      gap: .4rem;
+      padding: .6rem 1rem .15rem;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .pill-bar:last-of-type { padding-bottom: .35rem; }
+    .pill-bar::-webkit-scrollbar { display: none; }
+
+    .pill {
+      flex: 0 0 auto;
+      padding: .45rem .95rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .15s ease, background .15s ease, color .15s ease, border-color .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      line-height: 1.1;
+    }
+    .pill:hover { border-color: #9CA3AF; }
+    .pill:active { transform: translateY(1px); box-shadow: var(--shadow-press); }
+    .pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 6px 18px -6px var(--primary-glow);
+    }
+    .pill.grade-pill { font-weight: 700; }
+    .pill.grade-pill.active {
+      background: linear-gradient(135deg, var(--accent-amber), #FB923C);
+      border-color: transparent;
+      box-shadow: 0 6px 18px -6px rgba(245, 158, 11, .45);
+    }
+
+    /* CHAT */
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: .5rem 1rem 1rem;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)),
+        repeating-linear-gradient(135deg, rgba(15,23,42,.012) 0 8px, transparent 8px 16px);
+    }
+    .chat::-webkit-scrollbar { width: 6px; }
+    .chat::-webkit-scrollbar-thumb { background: rgba(15,23,42,.1); border-radius: 99px; }
+
+    .msg-row {
+      display: flex;
+      gap: .55rem;
+      margin: .8rem 0;
+      align-items: flex-end;
+      animation: fadeUp .25s ease both;
+    }
+    .msg-row.user { flex-direction: row-reverse; }
+    .msg-row .avatar {
+      width: 40px; height: 40px; flex: 0 0 40px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 1.3rem;
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+      border: 2px solid #fff;
+    }
+    .msg-row.user .avatar { background: linear-gradient(135deg, #BBF7D0, #86EFAC); }
+    .msg-row.ai .avatar   { background: linear-gradient(135deg, #C7D2FE, #A5F3FC); }
+
+    .bubble {
+      max-width: 78%;
+      padding: .85rem 1.05rem;
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+    }
+    .msg-row.user .bubble {
+      background: var(--user-bubble);
+      color: var(--user-bubble-text);
+      border-bottom-right-radius: 6px;
+      font-weight: 500;
+    }
+    .msg-row.ai .bubble {
+      background: var(--ai-bubble);
+      border: 1px solid var(--line);
+      border-bottom-left-radius: 6px;
+    }
+    .bubble .time {
+      display: block;
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: .35rem;
+      font-weight: 400;
+    }
+
+    /* AI structured response */
+    .ai-card .intro {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: .75rem;
+      color: var(--text);
+    }
+    .ai-card .steps {
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+    }
+    .step {
+      border-radius: var(--radius-md);
+      padding: .8rem .9rem;
+      display: flex;
+      gap: .8rem;
+      align-items: flex-start;
+      background: #F8FAFC;
+      border: 1px solid var(--line);
+      transition: transform .15s ease;
+    }
+    .step:hover { transform: translateY(-1px); }
+    .step .icon {
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      display: grid; place-items: center;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      flex: 0 0 38px;
+      box-shadow: 0 4px 10px -4px rgba(15,23,42,.2);
+    }
+    .step .icon.blue   { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+    .step .icon.green  { background: linear-gradient(135deg, #22C55E, #16A34A); }
+    .step .icon.purple { background: linear-gradient(135deg, #A855F7, #7C3AED); }
+    .step .body { flex: 1; }
+    .step .body p { margin: 0; font-size: .95rem; color: #475569; line-height: 1.55; }
+    .step .body p:first-child { font-weight: 700; color: var(--text); margin-bottom: .15rem; }
+    .step .num {
+      font-weight: 800;
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      font-size: .82rem;
+      flex: 0 0 28px;
+    }
+    .answer-box {
+      margin-top: .85rem;
+      padding: 1rem 1.1rem;
+      background: linear-gradient(135deg, var(--accent-purple-soft), #FAE8FF);
+      border: 1px solid #DDD6FE;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #5B21B6;
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 8px 22px -10px rgba(124, 58, 237, .35);
+    }
+    .speak-btn {
+      margin-top: .75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: #F3F4F6;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: .4rem .85rem;
+      font-size: .85rem;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+      transition: background .15s ease;
+    }
+    .speak-btn:hover { background: #E5E7EB; }
+    .speak-btn.playing { background: var(--primary-soft); color: #14532D; }
+
+    /* Typing dots */
+    .typing { display: inline-flex; gap: .3rem; align-items: center; padding: .25rem 0; }
+    .typing span {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #9CA3AF;
+      animation: blink 1.2s infinite ease-in-out both;
+    }
+    .typing span:nth-child(2) { animation-delay: .2s; }
+    .typing span:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink {
+      0%, 80%, 100% { transform: scale(.7); opacity: .4; }
+      40%           { transform: scale(1);  opacity: 1;  }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+
+    /* Attach chip + drop zone */
+    .attach-wrap { padding: 0 1rem; }
+    .attach-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--accent-blue-soft);
+      color: #1E3A8A;
+      padding: .45rem .8rem;
+      border-radius: 99px;
+      font-size: .85rem;
+      font-weight: 500;
+      margin: .35rem 0;
+      box-shadow: var(--shadow-soft);
+      animation: fadeUp .2s ease both;
+    }
+    .attach-chip .name {
+      max-width: 220px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .attach-chip .x {
+      cursor: pointer;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.7);
+      display: grid; place-items: center;
+      font-size: .85rem; line-height: 1;
+      color: #1E3A8A;
+    }
+    .attach-chip .x:hover { background: #fff; }
+
+    /* INPUT */
+    .input-wrap {
+      padding: .55rem .7rem .85rem;
+      background: linear-gradient(180deg, transparent, #FFFFFF 35%);
+      border-top: 1px solid var(--line-soft);
+    }
+    .input-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: .35rem;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: .4rem .5rem;
+      box-shadow: var(--shadow-soft);
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .input-bar:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+    .input-bar textarea#text {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font: inherit;
+      padding: .65rem .55rem;
+      color: var(--text);
+      font-size: 1rem;
+      resize: none;
+      max-height: 8em;
+      overflow-y: auto;
+      line-height: 1.4;
+    }
+    .input-bar textarea#text::placeholder { color: #9CA3AF; }
+
+    .icon-btn {
+      width: 40px; height: 40px;
+      flex: 0 0 40px;
+      border: 0;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      cursor: pointer;
+      font-size: 1.05rem;
+      background: transparent;
+      color: #4B5563;
+      transition: background .15s ease, transform .12s ease;
       font-family: inherit;
     }
-    textarea { min-height: 90px; resize: vertical; }
-    button {
-      margin-top: 1rem;
-      width: 100%;
-      padding: .75rem 1rem;
-      background: #2563eb;
+    .icon-btn:hover { background: #F3F4F6; }
+    .icon-btn:active { transform: scale(.94); }
+    .icon-btn.send {
+      width: 46px; height: 46px;
+      flex: 0 0 46px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: #fff;
-      border: 0;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
+      font-size: 1.15rem;
+      box-shadow: 0 8px 22px -6px var(--primary-glow);
     }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .result {
-      margin-top: 1.25rem;
-      padding: 1rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      line-height: 1.6;
-      min-height: 60px;
+    .icon-btn.send:hover { transform: translateY(-1px); }
+    .icon-btn.send:disabled {
+      background: #D1D5DB;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
     }
-    .error { color: #b91c1c; }
-    .muted { color: #6b7280; font-size: .85rem; }
+
+    .footer-tip {
+      text-align: center;
+      color: var(--muted);
+      font-size: .78rem;
+      padding: .2rem 1rem .25rem;
+    }
+
+    /* MOBILE TWEAKS */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .app {
+        max-width: 100%;
+        min-height: 100svh;
+        min-height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .header h1 { font-size: 1.2rem; }
+      .bubble { max-width: 82%; font-size: .96rem; }
+      .step .body p { font-size: .9rem; }
+      .answer-box { font-size: 1.05rem; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>🧮 מורה למתמטיקה</h1>
-    <p class="sub">שלחו שאלה כתובה או תמונה — נקבל הסבר בעברית, צעד-צעד.</p>
+  <main class="app">
+    <header class="header">
+      <div class="avatar-teacher" aria-hidden="true">👩‍🏫</div>
+      <div>
+        <h1>המורה שלי למתמטיקה</h1>
+        <p class="sub">💛 שלחו שאלה — נסביר צעד-צעד</p>
+      </div>
+    </header>
 
-    <form id="form">
-      <label for="text">שאלה (טקסט)</label>
-      <textarea id="text" name="text" placeholder="לדוגמה: כמה זה 12 ÷ 4 + 3?"></textarea>
+    <nav class="pill-bar" id="gradeBar" aria-label="בחירת כיתה">
+      <button class="pill grade-pill active" data-grade="1">🎒 כיתה א׳</button>
+      <button class="pill grade-pill" data-grade="2">🎒 כיתה ב׳</button>
+    </nav>
+    <nav class="pill-bar" id="levelBar" aria-label="בחירת רמה">
+      <button class="pill active" data-level="easy">רמה קלה</button>
+      <button class="pill" data-level="medium">רמה בינונית</button>
+      <button class="pill" data-level="advanced">רמה מתקדמת</button>
+    </nav>
 
-      <label for="image">או תמונה של השאלה</label>
-      <input type="file" id="image" name="image" accept="image/*" />
+    <section class="chat" id="chat" role="log" aria-live="polite">
+      <div class="msg-row ai">
+        <div class="avatar" aria-hidden="true">🤖</div>
+        <div class="bubble">
+          שלום! 👋 אני המורה הפרטי שלך למתמטיקה.
+          שלח לי שאלה — בטקסט או בתמונה — ואסביר לך צעד-צעד.
+        </div>
+      </div>
+    </section>
 
-      <button type="submit" id="submit">פתור</button>
-    </form>
+    <div id="attachWrap" class="attach-wrap"></div>
 
-    <div id="result" class="result muted">התשובה תופיע כאן…</div>
+    <div class="input-wrap">
+      <form class="input-bar" id="form" autocomplete="off">
+        <button class="icon-btn" type="button" id="attachBtn" title="צרף תמונה" aria-label="צרף תמונה">📎</button>
+        <button class="icon-btn" type="button" id="cameraBtn" title="צילום" aria-label="צילום">📷</button>
+        <input type="file" id="image"  accept="image/*"                       hidden />
+        <input type="file" id="camera" accept="image/*" capture="environment" hidden />
+        <textarea id="text" rows="1" placeholder="כתוב כאן את השאלה שלך…" aria-label="שאלה"></textarea>
+        <button class="icon-btn send" type="submit" id="submit" aria-label="שלח" title="שלח">➤</button>
+      </form>
+      <p class="footer-tip">שאלה שלא ברורה? תשאל שוב! 💡</p>
+    </div>
   </main>
 
   <script>
-    const form = document.getElementById('form');
-    const submitBtn = document.getElementById('submit');
-    const resultEl = document.getElementById('result');
+    const chat       = document.getElementById('chat');
+    const form       = document.getElementById('form');
+    const textInput  = document.getElementById('text');
+    const imageInput = document.getElementById('image');
+    const cameraInput= document.getElementById('camera');
+    const attachBtn  = document.getElementById('attachBtn');
+    const cameraBtn  = document.getElementById('cameraBtn');
+    const sendBtn    = document.getElementById('submit');
+    const attachWrap = document.getElementById('attachWrap');
+
+    let pendingFile   = null;
+    let selectedLevel = 'easy';
+    let selectedGrade = '1';
+
+    // Pills
+    document.querySelectorAll('#gradeBar .pill[data-grade]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#gradeBar .pill[data-grade]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedGrade = btn.dataset.grade;
+      });
+    });
+    document.querySelectorAll('#levelBar .pill[data-level]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#levelBar .pill[data-level]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedLevel = btn.dataset.level;
+      });
+    });
+
+    // File attach
+    attachBtn.addEventListener('click', () => imageInput.click());
+    cameraBtn.addEventListener('click', () => cameraInput.click());
+    imageInput.addEventListener('change', e => setFile(e.target.files[0]));
+    cameraInput.addEventListener('change', e => setFile(e.target.files[0]));
+
+    function setFile(f) {
+      pendingFile = f || null;
+      attachWrap.innerHTML = '';
+      if (!f) return;
+      const chip = document.createElement('div');
+      chip.className = 'attach-chip';
+      chip.innerHTML = `📎 <span class="name">${escapeHtml(f.name)}</span> <span class="x" title="הסר">✕</span>`;
+      chip.querySelector('.x').addEventListener('click', () => {
+        pendingFile = null;
+        imageInput.value = '';
+        cameraInput.value = '';
+        attachWrap.innerHTML = '';
+      });
+      attachWrap.appendChild(chip);
+    }
+
+    // Textarea auto-resize + Enter to submit (Shift+Enter for newline)
+    function autoresize() {
+      textInput.style.height = 'auto';
+      textInput.style.height = Math.min(textInput.scrollHeight, 8 * 16) + 'px';
+    }
+    textInput.addEventListener('input', autoresize);
+    textInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    function nowLabel() {
+      const d = new Date();
+      return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+    function scrollToEnd() { requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; }); }
+
+    function addUserMessage(text, fileName) {
+      const row = document.createElement('div');
+      row.className = 'msg-row user';
+      const body = fileName
+        ? `${escapeHtml(text || '(תמונה)')}<br><small>📎 ${escapeHtml(fileName)}</small>`
+        : escapeHtml(text);
+      row.innerHTML = `
+        <div class="avatar" aria-hidden="true">🧒</div>
+        <div class="bubble">${body}<span class="time">${nowLabel()}</span></div>
+      `;
+      chat.appendChild(row);
+      scrollToEnd();
+    }
+
+    function addTypingBubble() {
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      row.id = 'typing-row';
+      row.innerHTML = `
+        <div class="avatar" aria-hidden="true">🤖</div>
+        <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+      `;
+      chat.appendChild(row);
+      scrollToEnd();
+    }
+    function removeTypingBubble() { document.getElementById('typing-row')?.remove(); }
+
+    function addAiMessage(explanation) {
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      const card = renderExplanation(explanation);
+      row.innerHTML = `<div class="avatar" aria-hidden="true">🤖</div>`;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ai-card';
+      bubble.appendChild(card);
+      const speak = document.createElement('button');
+      speak.className = 'speak-btn'; speak.type = 'button';
+      speak.innerHTML = '🔊 הקרא לי';
+      speak.addEventListener('click', () => toggleSpeak(speak, explanation));
+      bubble.appendChild(speak);
+      const t = document.createElement('span');
+      t.className = 'time'; t.textContent = nowLabel();
+      bubble.appendChild(t);
+      row.appendChild(bubble);
+      chat.appendChild(row);
+      scrollToEnd();
+    }
+    function addAiError(message) {
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      row.innerHTML = `
+        <div class="avatar" aria-hidden="true">🤖</div>
+        <div class="bubble"><strong>אופס…</strong><br>${escapeHtml(message)}<span class="time">${nowLabel()}</span></div>
+      `;
+      chat.appendChild(row);
+      scrollToEnd();
+    }
+
+    function renderExplanation(raw) {
+      const wrap  = document.createElement('div');
+      const text  = (raw || '').trim();
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+      let answerLine = null;
+      const rest = [];
+      for (const ln of lines) {
+        const m = ln.match(/^\**\s*(?:[*\-•]\s*)?התשובה\s*[:\-–]\s*(.+?)\s*\**$/);
+        if (m && !answerLine) answerLine = m[1].replace(/\*+/g, '').trim();
+        else rest.push(ln);
+      }
+
+      const intro = rest.shift();
+      if (intro) {
+        const p = document.createElement('div');
+        p.className = 'intro';
+        p.textContent = stripMd(intro);
+        wrap.appendChild(p);
+      }
+
+      const steps = extractSteps(rest);
+      if (steps.length) {
+        const stepsWrap = document.createElement('div');
+        stepsWrap.className = 'steps';
+        steps.forEach((s, i) => stepsWrap.appendChild(renderStep(s, i)));
+        wrap.appendChild(stepsWrap);
+      } else if (rest.length) {
+        const body = document.createElement('div');
+        body.style.whiteSpace = 'pre-wrap';
+        body.textContent = rest.map(stripMd).join('\n');
+        wrap.appendChild(body);
+      }
+
+      if (answerLine) {
+        const a = document.createElement('div');
+        a.className = 'answer-box';
+        a.innerHTML = `⭐ <span>התשובה: ${escapeHtml(answerLine)}</span>`;
+        wrap.appendChild(a);
+      }
+      return wrap;
+    }
+
+    function stripMd(s) {
+      return s.replace(/\*\*/g, '').replace(/^[*\-•]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
+    }
+    function extractSteps(lines) {
+      const steps = [];
+      let current = null;
+      const starter = /^(?:\d+[.)]|[*\-•]|\*\*[^*]+\*\*)\s*/;
+      for (const ln of lines) {
+        if (starter.test(ln)) {
+          if (current) steps.push(current);
+          const title = stripMd(ln.split(/[:：]/)[0]).trim() || stripMd(ln);
+          const rest  = ln.includes(':') ? stripMd(ln.split(':').slice(1).join(':')) : '';
+          current = { title, body: rest ? [rest] : [] };
+        } else if (current) {
+          current.body.push(stripMd(ln));
+        } else {
+          current = { title: stripMd(ln), body: [] };
+        }
+      }
+      if (current) steps.push(current);
+      return steps.filter(s => s.title || s.body.length).slice(0, 6);
+    }
+    function renderStep(step, idx) {
+      const colors  = ['blue', 'green', 'purple'];
+      const symbols = ['÷', '+', '×', '−', '=', '✓'];
+      const t = step.title;
+      let sym = symbols[idx % symbols.length];
+      if (/חלק|חילוק|÷/.test(t)) sym = '÷';
+      else if (/חיבור|להוסיף|ועוד|\+/.test(t)) sym = '+';
+      else if (/כפל|כפול|×/.test(t)) sym = '×';
+      else if (/חיסור|פחות|−|-/.test(t)) sym = '−';
+
+      const el = document.createElement('div');
+      el.className = 'step';
+      el.innerHTML = `
+        <div class="icon ${colors[idx % colors.length]}" aria-hidden="true">${sym}</div>
+        <div class="body">
+          <p>${escapeHtml(step.title)}</p>
+          ${step.body.map(b => `<p>${escapeHtml(b)}</p>`).join('')}
+        </div>
+        <div class="num">${idx + 1}</div>
+      `;
+      return el;
+    }
+
+    // Hebrew TTS
+    let currentUtter = null;
+    function toggleSpeak(btn, text) {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      if (synth.speaking && currentUtter) {
+        synth.cancel(); currentUtter = null;
+        document.querySelectorAll('.speak-btn.playing').forEach(b => {
+          b.classList.remove('playing'); b.innerHTML = '🔊 הקרא לי';
+        });
+        return;
+      }
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'he-IL'; u.rate = 0.95;
+      const heVoice = synth.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
+      if (heVoice) u.voice = heVoice;
+      currentUtter = u;
+      btn.classList.add('playing'); btn.innerHTML = '⏸ עצור';
+      u.onend = u.onerror = () => {
+        btn.classList.remove('playing'); btn.innerHTML = '🔊 הקרא לי'; currentUtter = null;
+      };
+      synth.speak(u);
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const text = document.getElementById('text').value.trim();
-      const file = document.getElementById('image').files[0];
+      const text = textInput.value.trim();
+      if (!text && !pendingFile) return;
 
-      if (!text && !file) {
-        resultEl.className = 'result error';
-        resultEl.textContent = 'יש להזין שאלה או לבחור תמונה.';
-        return;
-      }
+      addUserMessage(text, pendingFile?.name);
+      const sentText = text;
+      const sentFile = pendingFile;
+      textInput.value = ''; autoresize();
+      pendingFile = null;
+      imageInput.value = ''; cameraInput.value = '';
+      attachWrap.innerHTML = '';
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'חושב…';
-      resultEl.className = 'result muted';
-      resultEl.textContent = 'מחשב את הפתרון…';
+      sendBtn.disabled = true;
+      addTypingBubble();
 
       try {
         const fd = new FormData();
-        if (text) fd.append('text', text);
-        if (file) fd.append('image', file);
-
-        const res = await fetch('/solve', { method: 'POST', body: fd });
+        if (sentText) fd.append('text', sentText);
+        if (sentFile) fd.append('image', sentFile);
+        fd.append('grade', selectedGrade);
+        fd.append('level', selectedLevel);
+        const res  = await fetch('/solve', { method: 'POST', body: fd });
         const data = await res.json();
-
+        removeTypingBubble();
         if (!res.ok) throw new Error(data.error || 'שגיאה לא ידועה');
-
-        resultEl.className = 'result';
-        resultEl.textContent = data.explanation;
+        addAiMessage(data.explanation);
       } catch (err) {
-        resultEl.className = 'result error';
-        resultEl.textContent = 'שגיאה: ' + err.message;
+        removeTypingBubble();
+        addAiError(err.message || 'משהו השתבש. נסה שוב.');
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'פתור';
+        sendBtn.disabled = false;
+        textInput.focus();
       }
     });
   </script>
