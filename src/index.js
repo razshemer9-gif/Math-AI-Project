@@ -2,11 +2,23 @@ import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import helmet from 'helmet';
 import solveRouter from './routes/solve.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+
+// Trust proxy so rate-limit and `req.ip` work behind Render's load balancer.
+app.set('trust proxy', 1);
+
+// Security headers. CSP is disabled here because the UI uses inline <style>
+// + <script> and loads Rubik from fonts.googleapis.com; tightening CSP would
+// require refactoring those out and is out of scope for this audit fix.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 
 app.use((_req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,7 +28,7 @@ app.use((_req, res, next) => {
 });
 app.options('*', (_req, res) => res.sendStatus(204));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '6mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));

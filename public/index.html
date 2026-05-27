@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#FFF8E7" />
   <title>המורה שלי למתמטיקה</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -327,6 +327,42 @@
     .speak-btn:hover { background: #E5E7EB; }
     .speak-btn.playing { background: var(--primary-soft); color: #14532D; }
 
+    /* Friendly error bubble */
+    .err-bubble {
+      background: linear-gradient(135deg, #FEF2F2, #FFF1F2) !important;
+      border-color: #FECACA !important;
+    }
+    .err-bubble .err-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: .15rem;
+      color: #B91C1C;
+    }
+    .err-bubble .err-sub {
+      color: #7F1D1D;
+      margin-bottom: .6rem;
+      font-size: .95rem;
+    }
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: #DC2626;
+      color: #fff;
+      border: 0;
+      border-radius: 99px;
+      padding: .45rem .9rem;
+      font: inherit;
+      font-weight: 600;
+      font-size: .9rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px -6px rgba(220, 38, 38, .5);
+      transition: transform .12s ease, background .15s ease;
+    }
+    .retry-btn:hover  { background: #B91C1C; }
+    .retry-btn:active { transform: scale(.96); }
+    .retry-btn:disabled { background: #D1D5DB; cursor: not-allowed; box-shadow: none; }
+
     /* Typing dots */
     .typing { display: inline-flex; gap: .3rem; align-items: center; padding: .25rem 0; }
     .typing span {
@@ -479,13 +515,13 @@
     </header>
 
     <nav class="pill-bar" id="gradeBar" aria-label="בחירת כיתה">
-      <button class="pill grade-pill active" data-grade="1">🎒 כיתה א׳</button>
-      <button class="pill grade-pill" data-grade="2">🎒 כיתה ב׳</button>
+      <button type="button" class="pill grade-pill active" data-grade="1">🎒 כיתה א׳</button>
+      <button type="button" class="pill grade-pill" data-grade="2">🎒 כיתה ב׳</button>
     </nav>
     <nav class="pill-bar" id="levelBar" aria-label="בחירת רמה">
-      <button class="pill active" data-level="easy">רמה קלה</button>
-      <button class="pill" data-level="medium">רמה בינונית</button>
-      <button class="pill" data-level="advanced">רמה מתקדמת</button>
+      <button type="button" class="pill active" data-level="easy">רמה קלה</button>
+      <button type="button" class="pill" data-level="medium">רמה בינונית</button>
+      <button type="button" class="pill" data-level="advanced">רמה מתקדמת</button>
     </nav>
 
     <section class="chat" id="chat" role="log" aria-live="polite">
@@ -527,6 +563,11 @@
     let pendingFile   = null;
     let selectedLevel = 'easy';
     let selectedGrade = '1';
+    let lastSubmission = null; // remembered for the retry button on errors
+
+    const GENERIC_ERROR_TITLE = 'אופס! משהו השתבש.';
+    const GENERIC_ERROR_SUB   = 'נסה שוב בעוד רגע.';
+    const MAX_TEXT_LEN = 500;
 
     // Pills
     document.querySelectorAll('#gradeBar .pill[data-grade]').forEach(btn => {
@@ -637,13 +678,36 @@
       chat.appendChild(row);
       scrollToEnd();
     }
-    function addAiError(message) {
+    function addAiError() {
       const row = document.createElement('div');
       row.className = 'msg-row ai';
-      row.innerHTML = `
-        <div class="avatar" aria-hidden="true">🤖</div>
-        <div class="bubble"><strong>אופס…</strong><br>${escapeHtml(message)}<span class="time">${nowLabel()}</span></div>
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.setAttribute('aria-hidden', 'true');
+      avatar.textContent = '🤖';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble err-bubble';
+      bubble.innerHTML = `
+        <div class="err-title">${GENERIC_ERROR_TITLE}</div>
+        <div class="err-sub">${GENERIC_ERROR_SUB}</div>
       `;
+      if (lastSubmission) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'retry-btn';
+        btn.innerHTML = '🔄 נסה שוב';
+        btn.addEventListener('click', () => {
+          btn.disabled = true;
+          retrySubmission();
+        });
+        bubble.appendChild(btn);
+      }
+      const t = document.createElement('span');
+      t.className = 'time';
+      t.textContent = nowLabel();
+      bubble.appendChild(t);
+      row.appendChild(avatar);
+      row.appendChild(bubble);
       chat.appendChild(row);
       scrollToEnd();
     }
@@ -760,10 +824,51 @@
       synth.speak(u);
     }
 
+    async function performSubmission({ text, file, grade, level }) {
+      sendBtn.disabled = true;
+      addTypingBubble();
+      try {
+        const fd = new FormData();
+        if (text) fd.append('text', text);
+        if (file) fd.append('image', file);
+        fd.append('grade', grade);
+        fd.append('level', level);
+        const res = await fetch('/solve', { method: 'POST', body: fd });
+        let data = {};
+        try { data = await res.json(); } catch {}
+        removeTypingBubble();
+        if (!res.ok || !data.explanation) {
+          addAiError();
+          return;
+        }
+        addAiMessage(data.explanation);
+        // Success — discard the retry handle.
+        lastSubmission = null;
+      } catch {
+        // Network/transport failure — same generic bubble.
+        removeTypingBubble();
+        addAiError();
+      } finally {
+        sendBtn.disabled = false;
+        textInput.focus();
+      }
+    }
+
+    function retrySubmission() {
+      if (!lastSubmission) return;
+      performSubmission(lastSubmission);
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = textInput.value.trim();
       if (!text && !pendingFile) return;
+      if (text.length > MAX_TEXT_LEN) {
+        addUserMessage(text, pendingFile?.name);
+        lastSubmission = null;
+        addAiError();
+        return;
+      }
 
       addUserMessage(text, pendingFile?.name);
       const sentText = text;
@@ -773,27 +878,8 @@
       imageInput.value = ''; cameraInput.value = '';
       attachWrap.innerHTML = '';
 
-      sendBtn.disabled = true;
-      addTypingBubble();
-
-      try {
-        const fd = new FormData();
-        if (sentText) fd.append('text', sentText);
-        if (sentFile) fd.append('image', sentFile);
-        fd.append('grade', selectedGrade);
-        fd.append('level', selectedLevel);
-        const res  = await fetch('/solve', { method: 'POST', body: fd });
-        const data = await res.json();
-        removeTypingBubble();
-        if (!res.ok) throw new Error(data.error || 'שגיאה לא ידועה');
-        addAiMessage(data.explanation);
-      } catch (err) {
-        removeTypingBubble();
-        addAiError(err.message || 'משהו השתבש. נסה שוב.');
-      } finally {
-        sendBtn.disabled = false;
-        textInput.focus();
-      }
+      lastSubmission = { text: sentText, file: sentFile, grade: selectedGrade, level: selectedLevel };
+      performSubmission(lastSubmission);
     });
   </script>
 </body>
